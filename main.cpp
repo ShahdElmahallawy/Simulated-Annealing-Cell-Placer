@@ -1,14 +1,18 @@
 #include<bits/stdc++.h>
+#include <chrono>
+using namespace std::chrono;
 using namespace std;
 
 int cells_no, nets_no, n, m;
 double cooling_rate = 0.95;
 
-string test_case_file = "tests/test0.txt";
+string test_case_file;
 vector<vector<int>> grid, nets;
 vector<pair<int, int>> cells;
+vector<vector<int>> nets_of_cells;
+vector<int> wire_length;
 
-int calculateWireLength(int i) {
+int calculateWireLength(int i, bool update_wire=false) {
     int min_x = INT_MAX, min_y = INT_MAX, max_x = INT_MIN, max_y = INT_MIN;
     for(auto c: nets[i]) {
         min_x = min(min_x, cells[c].first);
@@ -16,7 +20,9 @@ int calculateWireLength(int i) {
         max_x = max(max_x, cells[c].first);
         max_y = max(max_y, cells[c].second);
     }
-    return (max_x - min_x + 1) + (max_y - min_y + 1);
+    int length = (max_x - min_x) + (max_y - min_y);
+    if(update_wire) wire_length[i] = length;
+    return length;
 }
 
 void random_placement() {
@@ -55,7 +61,9 @@ void print_binary() {
 }
 
 int main() {
+    cin >> test_case_file;
     srand(1);
+    auto start = high_resolution_clock::now();
     ifstream input_file;
     input_file.open(test_case_file);
     input_file >> cells_no >> nets_no >> n >> m;
@@ -64,19 +72,22 @@ int main() {
     grid.resize(n, vector<int>(m, -1));
     nets.resize(nets_no);
     cells.resize(cells_no);
+    nets_of_cells.resize(cells_no);
+    wire_length.resize(nets_no);
     for(int i=0; i<nets_no; i++) {
         int comp_no, temp;
         input_file >> comp_no;
         while(comp_no--){
              input_file >> temp;
              nets[i].push_back(temp);
+             nets_of_cells[temp].push_back(i);
         }
     }
 
     // Random Placment
     random_placement();
     int current_cost = 0;
-    for(int i=0; i<nets_no; i++) current_cost += calculateWireLength(i);
+    for(int i=0; i<nets_no; i++) current_cost += calculateWireLength(i, true);
 
     // Print Initial Placement
     cout << "Initial Placement:\n";
@@ -91,7 +102,6 @@ int main() {
 
     // Execute Simulated Annealing
     while(current_temp > final_temp) {
-        // cout << current_temp << endl;
         int t = 10*cells_no;
         while(t--) {
             int a = rand() % cells_no, b = -1, b_loc = rand() % (n*m);
@@ -106,21 +116,49 @@ int main() {
             }
             grid[b_row][b_col] = a;
             grid[a_row][a_col] = b;
-            // cout << "Swapping " << a << " with " << b <<endl;
-            int nw_cost = 0;
-            for(int i=0; i<nets_no; i++) nw_cost += calculateWireLength(i);
+            int nw_cost = current_cost;
+            vector<int> new_costs;
+            for(auto i:nets_of_cells[a]) {
+                int new_wire_length = calculateWireLength(i);
+                new_costs.push_back(new_wire_length);
+                nw_cost = nw_cost - wire_length[i] + new_wire_length;
+            }
+            if(b != -1) {
+                for(auto i:nets_of_cells[b]) {
+                    int new_wire_length = calculateWireLength(i);
+                    new_costs.push_back(new_wire_length);
+                    nw_cost = nw_cost - wire_length[i] + new_wire_length;
+                }
+            }
             if(nw_cost < current_cost) {
-                // cout << "Success\n";
                 current_cost = nw_cost;
+                int i = 0;
+                for(; i<nets_of_cells[a].size(); i++) {
+                    wire_length[nets_of_cells[a][i]] = new_costs[i];
+                }
+                if(b != -1) {
+                    for(; i<nets_of_cells[a].size() + nets_of_cells[b].size(); i++) {
+                        wire_length[nets_of_cells[b][i-nets_of_cells[a].size()]] = new_costs[i];
+                    }
+                }
+
             }
             else {
                 double prob = (1 - exp((-1*(nw_cost - current_cost))/current_temp));
                 if(prob < 0.5) {
-                    // cout << "Success2\n";
                     current_cost = nw_cost;
+                    int i = 0;
+                    for(; i<nets_of_cells[a].size(); i++) {
+                        wire_length[nets_of_cells[a][i]] = new_costs[i];
+                    }
+                    if(b != -1) {
+                        for(; i<nets_of_cells[a].size() + nets_of_cells[b].size(); i++) {
+                            wire_length[nets_of_cells[b][i-nets_of_cells[a].size()]] = new_costs[i];
+                        }
+                    }
                 }
                 else {
-                    // cout << "Fail\n";
+                    // Return back original cell places and grid
                     if(b == -1) {
                         cells[a] = {a_row, a_col};
                     }
@@ -134,7 +172,8 @@ int main() {
         }
         current_temp = cooling_rate * current_temp;
     }
-
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
     // Print Binary
     cout << "Final Placement:\n";
     print_binary();
@@ -146,4 +185,6 @@ int main() {
 
     // Print Total Cost
     cout << "Final wire length = " << current_cost << endl;
+
+    cout << "Time taken is: " << duration.count() << " milliseconds\n";
 }
