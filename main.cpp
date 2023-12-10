@@ -1,4 +1,5 @@
 #include<bits/stdc++.h>
+#include<random>
 #include <chrono>
 using namespace std::chrono;
 using namespace std;
@@ -6,11 +7,25 @@ using namespace std;
 int cells_no, nets_no, n, m;
 double cooling_rate = 0.95;
 
-string test_case_file;
+string test_case_file = "tests/t3.txt";
 vector<vector<int>> grid, nets;
 vector<pair<int, int>> cells;
 vector<vector<int>> nets_of_cells;
 vector<int> wire_length;
+
+void save_grid_state(const string& filename, const vector<vector<int>>& grid) {
+    ofstream outFile(filename, ios::app);
+    for (const auto& row : grid) {
+        for (const auto& elem : row) {
+            if (elem == -1)
+                outFile << "__ ";
+            else
+                outFile << setw(2) << setfill('0') << elem << " ";
+        }
+        outFile << "\n";
+    }
+    outFile << "\n";
+}
 
 int calculateWireLength(int i, bool update_wire=false) {
     int min_x = INT_MAX, min_y = INT_MAX, max_x = INT_MIN, max_y = INT_MIN;
@@ -30,7 +45,9 @@ void random_placement() {
     for(int i=0; i<n*m; i++) {
         indices.push_back(i);
     }
-    random_shuffle(indices.begin(), indices.end()); 
+    unsigned seed = 12345;  // Example fixed seed
+    std::default_random_engine engine(seed);
+    shuffle(indices.begin(), indices.end(), engine); 
     for(int i=0; i<cells_no; i++) {
         int row = indices[i] / m;
         int col = indices[i] % m;
@@ -61,13 +78,13 @@ void print_binary() {
 }
 
 int main() {
-    cin >> test_case_file;
     srand(1);
     auto start = high_resolution_clock::now();
     ifstream input_file;
     input_file.open(test_case_file);
     input_file >> cells_no >> nets_no >> n >> m;
 
+    ofstream logFile("out\\t3_annealing_log_0.95.txt");
     // Create grid, nets, and cells with proper sizes
     grid.resize(n, vector<int>(m, -1));
     nets.resize(nets_no);
@@ -170,7 +187,11 @@ int main() {
                 }
             }
         }
+        if (logFile.is_open()) {
+            logFile << current_temp << " " << current_cost << "\n";
+        }
         current_temp = cooling_rate * current_temp;
+        save_grid_state("out\\grid_states_d1.txt", grid);
     }
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
