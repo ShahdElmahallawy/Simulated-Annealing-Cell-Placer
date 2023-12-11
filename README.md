@@ -52,19 +52,19 @@ The code has passed through all the test cases. In the largest test case, "t3.tx
 
 # Repository Structure
 
-main.cpp: Main C++ file containing the SA algorithm.
+- main.cpp: Main C++ file containing the SA algorithm.
 
-tests/: Directory that has all the tests provided in the project. 
+- tests/: Directory that has all the tests provided in the project. 
 
-graph_scripts/: Directory containing Python two scripts for generating plots (one for Cooling Rate VS. TWL) and the other for temperature VS. TWL.)
+- graph_scripts/: Directory containing Python two scripts for generating plots (one for Cooling Rate VS. TWL) and the other for temperature VS. TWL.)
 
-log/: Directory containing input files and output logs.
+- log/: Directory containing input files and output logs.
 
-gif_script_and_log/: Directory containing Python script for generating GIF, and containing input files and output logs for the grid.
+- gif_script_and_log/: Directory containing Python script for generating GIF and containing input files and output logs for the grid.
 
-gifs/: Directory where generated animations are saved.
+- gifs/: Directory where generated animations are saved.
 
-graphs/: Directory where generated plots are saved.
+- graphs/: Directory where generated plots are saved.
 
 # Output
 The Program outputs the cells before and after placements and its binary representation. 
