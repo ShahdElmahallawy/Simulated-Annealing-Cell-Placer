@@ -130,11 +130,11 @@ int main() {
     while(current_temp > final_temp) {
         int t = 10*cells_no;
         while(t--) {
-            // Try swapping two cells where a is always a cell and b can be an empty cell
+            // Try swapping two cells where a is always a cell and b can be an empty site
             int a = rand() % cells_no, b = -1, b_loc = rand() % (n*m);
             int a_row = cells[a].first, a_col = cells[a].second;
             int b_row = b_loc / m, b_col = b_loc % m;
-            if(grid[b_row][b_col] == -1) {      // Swap with an empty cell
+            if(grid[b_row][b_col] == -1) {      // Swap with an empty site
                 cells[a] = {b_row, b_col};
             }
             else {                              // Swap where both a and b are cells
