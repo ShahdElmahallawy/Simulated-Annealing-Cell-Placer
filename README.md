@@ -47,7 +47,7 @@ Detailed Analysis: In-depth analysis of the algorithm's performance with varying
   
   `python TempvsTWL.py`
 
-# Optimization
+# Performance
 The code has passed through all the test cases. In the largest test case, "t3.txt," it was almost 4 seconds. 
 
 # Repository Structure
