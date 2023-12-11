@@ -34,7 +34,7 @@ vector<int> wire_length;
 //     outFile << "\n";
 // }
 
-inline int calculateWireLength(int i, bool update_wire=false) {
+int calculateWireLength(int i, bool update_wire=true) {
     // This function calculates the wire length for a net
     int min_x = INT_MAX, min_y = INT_MAX, max_x = INT_MIN, max_y = INT_MIN;
     for(auto c: nets[i]) {
@@ -48,7 +48,7 @@ inline int calculateWireLength(int i, bool update_wire=false) {
     return length;
 }
 
-inline void random_placement() {
+void random_placement() {
     // This function initializes the grid with random placement
     vector<int> indices;
     for(int i=0; i<n*m; i++) {
@@ -57,6 +57,7 @@ inline void random_placement() {
     // unsigned seed = 12345;  // Example fixed seed
     // std::default_random_engine engine(seed);
     random_shuffle(indices.begin(), indices.end()); 
+    // shuffle(indices.begin(), indices.end(), engine);
     for(int i=0; i<cells_no; i++) {
         int row = indices[i] / m;
         int col = indices[i] % m;
@@ -65,7 +66,7 @@ inline void random_placement() {
     }
 }
 
-inline void print_grid() {
+void print_grid() {
     // Helper function for printing grid
     for(int i=0; i<n; i++) {
         for(int j=0; j<m; j++) {
@@ -77,7 +78,7 @@ inline void print_grid() {
     }
 }
 
-inline void print_binary() {
+void print_binary() {
     // Helper funcntion for printing in binary
     for(int i=0; i<n; i++) {
         for(int j=0; j<m; j++) {
@@ -100,6 +101,7 @@ int main() {
     cells.resize(cells_no);
     nets_of_cells.resize(cells_no);
     wire_length.resize(nets_no);
+    vector<int> old_wire_length(nets_no, 0);
     for(int i=0; i<nets_no; i++) {
         int comp_no, temp;
         input_file >> comp_no;
@@ -113,7 +115,7 @@ int main() {
     // Random Placment
     random_placement();
     int current_cost = 0;
-    for(int i=0; i<nets_no; i++) current_cost += calculateWireLength(i, true);
+    for(int i=0; i<nets_no; i++) current_cost += calculateWireLength(i);
 
     // Print Initial Placement
     cout << "Initial Placement:\n";
@@ -146,59 +148,67 @@ int main() {
             grid[a_row][a_col] = b;
             // Calculate new cost             
             int nw_cost = current_cost;
-            vector<int> new_costs;
+            
             // Only loop over nets that have cell a
             for(auto i:nets_of_cells[a]) {
+                old_wire_length[i] = wire_length[i];
                 int new_wire_length = calculateWireLength(i);
-                new_costs.push_back(new_wire_length);           // new costs of nets when swapping
-                nw_cost = nw_cost - wire_length[i] + new_wire_length;
+                nw_cost = nw_cost - old_wire_length[i] + new_wire_length;
             }
             // Do same thing for nets of cell b if it is not empty
             if(b != -1) {
                 for(auto i:nets_of_cells[b]) {
+                    if(old_wire_length[i]) continue;
+                    old_wire_length[i] = wire_length[i];
                     int new_wire_length = calculateWireLength(i);
-                    new_costs.push_back(new_wire_length);
-                    nw_cost = nw_cost - wire_length[i] + new_wire_length;
+                    nw_cost = nw_cost - old_wire_length[i] + new_wire_length;
                 }
             }
-            // If new cost is less update the nets and current cost
-            if(nw_cost < current_cost) {
+            if(nw_cost < current_cost) { // Accept swap
                 current_cost = nw_cost;
-                int i = 0;
-                for(; i<nets_of_cells[a].size(); i++) {
-                    wire_length[nets_of_cells[a][i]] = new_costs[i];
-                }
-                if(b != -1) {
-                    for(; i<nets_of_cells[a].size() + nets_of_cells[b].size(); i++) {
-                        wire_length[nets_of_cells[b][i-nets_of_cells[a].size()]] = new_costs[i];
+                for(auto i:nets_of_cells[a]) if(old_wire_length[i]) {
+                        old_wire_length[i] = 0;
                     }
-                }
-
+                    if(b != -1) {
+                        for(auto i:nets_of_cells[b]) if(old_wire_length[i]) {
+                            old_wire_length[i] = 0;
+                        }
+                    }
             }
             else {
                 double prob = (1 - exp((-1*(nw_cost - current_cost))/current_temp));
-                if(prob < 0.5) { // If probability is less than 0.5 update the nets and current cost
+                if(prob < 0.5) { // Accept swap
                     current_cost = nw_cost;
-                    int i = 0;
-                    for(; i<nets_of_cells[a].size(); i++) {
-                        wire_length[nets_of_cells[a][i]] = new_costs[i];
+                    for(auto i:nets_of_cells[a]) if(old_wire_length[i]) {
+                        old_wire_length[i] = 0;
                     }
                     if(b != -1) {
-                        for(; i<nets_of_cells[a].size() + nets_of_cells[b].size(); i++) {
-                            wire_length[nets_of_cells[b][i-nets_of_cells[a].size()]] = new_costs[i];
+                        for(auto i:nets_of_cells[b]) if(old_wire_length[i]) {
+                            old_wire_length[i] = 0;
                         }
                     }
                 }
                 else {
-                    // Return back original cell places and grid
+                    // Return back original cell places, grid, and wire lengths
                     if(b == -1) {
                         cells[a] = {a_row, a_col};
                     }
-                    else {
+                    else {  
                         swap(cells[a], cells[b]);
+                    }
+                    for(auto i:nets_of_cells[a]) if(old_wire_length[i]) {
+                        wire_length[i] = old_wire_length[i];
+                        old_wire_length[i] = 0;
+                    }
+                    if(b != -1) {
+                        for(auto i:nets_of_cells[b]) if(old_wire_length[i]) {
+                            wire_length[i] = old_wire_length[i];
+                            old_wire_length[i] = 0;
+                        }
                     }
                     grid[a_row][a_col] = a;
                     grid[b_row][b_col] = b;
+                    
                 }
             }
         }
