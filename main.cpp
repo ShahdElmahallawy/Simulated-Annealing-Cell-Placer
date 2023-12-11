@@ -8,30 +8,34 @@ int cells_no, nets_no, n, m;
 double cooling_rate = 0.95;
 
 string test_case_file = "tests/t3.txt";
-ofstream logFile("log/d0_annealing_log_0.95.txt");
-string gif_file_name = "gif_script_and_log/grid_states_t3_0.95.txt";
-int isLog = 1;
+
+// For logging, uncomment
+// ofstream logFile("log/d0_annealing_log_0.95.txt");
+// string gif_file_name = "gif_script_and_log/grid_states_t3_0.95.txt";
+// int isLog = 0;
 
 vector<vector<int>> grid, nets;
 vector<pair<int, int>> cells;
 vector<vector<int>> nets_of_cells;
 vector<int> wire_length;
 
-void save_grid_state(const string& filename, const vector<vector<int>>& grid) {
-    ofstream outFile(filename, ios::app);
-    for (const auto& row : grid) {
-        for (const auto& elem : row) {
-            if (elem == -1)
-                outFile << "__ ";
-            else
-                outFile << setw(2) << setfill('0') << elem << " ";
-        }
-        outFile << "\n";
-    }
-    outFile << "\n";
-}
+// For logging, uncomment
+// void save_grid_state(const string& filename, const vector<vector<int>>& grid) {
+//     ofstream outFile(filename, ios::app);
+//     for (const auto& row : grid) {
+//         for (const auto& elem : row) {
+//             if (elem == -1)
+//                 outFile << "__ ";
+//             else
+//                 outFile << setw(2) << setfill('0') << elem << " ";
+//         }
+//         outFile << "\n";
+//     }
+//     outFile << "\n";
+// }
 
-int calculateWireLength(int i, bool update_wire=false) {
+inline int calculateWireLength(int i, bool update_wire=false) {
+    // This function calculates the wire length for a net
     int min_x = INT_MAX, min_y = INT_MAX, max_x = INT_MIN, max_y = INT_MIN;
     for(auto c: nets[i]) {
         min_x = min(min_x, cells[c].first);
@@ -44,12 +48,13 @@ int calculateWireLength(int i, bool update_wire=false) {
     return length;
 }
 
-void random_placement() {
+inline void random_placement() {
+    // This function initializes the grid with random placement
     vector<int> indices;
     for(int i=0; i<n*m; i++) {
         indices.push_back(i);
     }
-    // unsigned seed = 12354;  // Example fixed seed
+    // unsigned seed = 12345;  // Example fixed seed
     // std::default_random_engine engine(seed);
     random_shuffle(indices.begin(), indices.end()); 
     for(int i=0; i<cells_no; i++) {
@@ -60,7 +65,8 @@ void random_placement() {
     }
 }
 
-void print_grid() {
+inline void print_grid() {
+    // Helper function for printing grid
     for(int i=0; i<n; i++) {
         for(int j=0; j<m; j++) {
             if(grid[i][j] == -1) cout << "__ ";
@@ -71,7 +77,8 @@ void print_grid() {
     }
 }
 
-void print_binary() {
+inline void print_binary() {
+    // Helper funcntion for printing in binary
     for(int i=0; i<n; i++) {
         for(int j=0; j<m; j++) {
             if(grid[i][j] == -1) cout << 0;
@@ -124,25 +131,30 @@ int main() {
     while(current_temp > final_temp) {
         int t = 10*cells_no;
         while(t--) {
+            // Try swapping two cells where a is always a cell and b can be an empty cell
             int a = rand() % cells_no, b = -1, b_loc = rand() % (n*m);
             int a_row = cells[a].first, a_col = cells[a].second;
             int b_row = b_loc / m, b_col = b_loc % m;
             if(grid[b_row][b_col] == -1) {      // Swap with an empty cell
                 cells[a] = {b_row, b_col};
             }
-            else {
+            else {                              // Swap where both a and b are cells
                 b = grid[b_row][b_col];
                 swap(cells[a], cells[b]);
             }
-            grid[b_row][b_col] = a;
+            // update grid
+            grid[b_row][b_col] = a;             
             grid[a_row][a_col] = b;
+            // Calculate new cost             
             int nw_cost = current_cost;
             vector<int> new_costs;
+            // Only loop over nets that have cell a
             for(auto i:nets_of_cells[a]) {
                 int new_wire_length = calculateWireLength(i);
-                new_costs.push_back(new_wire_length);
+                new_costs.push_back(new_wire_length);           // new costs of nets when swapping
                 nw_cost = nw_cost - wire_length[i] + new_wire_length;
             }
+            // Do same thing for nets of cell b if it is not empty
             if(b != -1) {
                 for(auto i:nets_of_cells[b]) {
                     int new_wire_length = calculateWireLength(i);
@@ -150,6 +162,7 @@ int main() {
                     nw_cost = nw_cost - wire_length[i] + new_wire_length;
                 }
             }
+            // If new cost is less update the nets and current cost
             if(nw_cost < current_cost) {
                 current_cost = nw_cost;
                 int i = 0;
@@ -165,7 +178,7 @@ int main() {
             }
             else {
                 double prob = (1 - exp((-1*(nw_cost - current_cost))/current_temp));
-                if(prob < 0.5) {
+                if(prob < 0.5) { // If probability is less than 0.5 update the nets and current cost
                     current_cost = nw_cost;
                     int i = 0;
                     for(; i<nets_of_cells[a].size(); i++) {
@@ -190,12 +203,14 @@ int main() {
                 }
             }
         }
-        if (isLog == 2) {
-            logFile << current_temp << " " << current_cost << "\n";
-        }
+        // For logging, uncomment
+        // if (isLog == 2) {
+        //     logFile << current_temp << " " << current_cost << "\n";
+        // }
+        // if(isLog == 1)
+        //     save_grid_state(gif_file_name, grid);
         current_temp = cooling_rate * current_temp;
-        if(isLog == 1)
-            save_grid_state(gif_file_name, grid);
+        
     }
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
