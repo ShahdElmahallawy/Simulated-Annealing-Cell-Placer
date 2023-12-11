@@ -40,4 +40,4 @@ def generate_animation(file_path, output_gif, cell_size=25, font_size=12):
 
     images[0].save(output_gif, save_all=True, append_images=images[1:], duration=500, loop=0)
 
-generate_animation('./gif_script_and_log/grid_states_t2_0.9.txt', './gifs/t2_0.9.gif')
+generate_animation('./gif_script_and_log/grid_states_t3_0.95.txt', './gifs/t3_0.95.gif')
