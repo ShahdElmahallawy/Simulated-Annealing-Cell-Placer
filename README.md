@@ -9,9 +9,9 @@ Detailed Analysis: In-depth analysis of the algorithm's performance with varying
 
 # Getting Started
   # Prerequisites
-    C++ Compiler (GCC recommended)
-    Python 3.x
-    Python Libraries: Matplotlib, PIL (Python Imaging Library)
+  C++ Compiler (GCC recommended)
+  Python 3.x
+  Python Libraries: Matplotlib, PIL (Python Imaging Library)
     
   # Installation
   1. Clone the repository to your local machine:
@@ -25,23 +25,25 @@ Detailed Analysis: In-depth analysis of the algorithm's performance with varying
      g++ -o main main.cpp
    Run the executable:
      ./main
-2. Visualize Results with Python
+   
+3. Visualize Results with Python
   Ensure Python and required libraries are installed.
   Run the Python scripts to generate plots and animations.
-  python plot_graphs.py
-  python generate_animation.py
+  python CoolingRatevsTWL.py
+  python CoolingRatevsTWL.py
+  python TempvsTWL.py
 
 # Optimization
 The code has passed through all the test cases. In the largest test case, "t3.txt," it was almost 4 seconds. 
 
 # Repository Structure
-    main.cpp: Main C++ file containing the SA algorithm.
-    tests/: Directory that has all the tests provided in the project. 
-    graph_scripts/: Directory containing Python two scripts for generating plots (one for Cooling Rate VS. TWL) and the other for temperature VS. TWL.)
-    log/: Directory containing input files and output logs.
-    gif_script_and_log/: Directory containing Python script for generating GIF, and containing input files and output logs for the grid.
-    gifs/: Directory where generated animations are saved.
-    graphs/: Directory where generated plots are saved.
+  main.cpp: Main C++ file containing the SA algorithm.
+  tests/: Directory that has all the tests provided in the project. 
+  graph_scripts/: Directory containing Python two scripts for generating plots (one for Cooling Rate VS. TWL) and the other for temperature VS. TWL.)
+  log/: Directory containing input files and output logs.
+  gif_script_and_log/: Directory containing Python script for generating GIF, and containing input files and output logs for the grid.
+  gifs/: Directory where generated animations are saved.
+  graphs/: Directory where generated plots are saved.
 
 # Output
 The Program outputs the cells before and after placements and its binary representation. 
