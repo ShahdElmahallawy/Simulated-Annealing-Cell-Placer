@@ -90,7 +90,6 @@ inline void print_binary() {
 
 int main() {
     srand(1);
-    auto start = high_resolution_clock::now();
     ifstream input_file;
     input_file.open(test_case_file);
     input_file >> cells_no >> nets_no >> n >> m;
@@ -110,7 +109,7 @@ int main() {
              nets_of_cells[temp].push_back(i);
         }
     }
-
+    auto start = high_resolution_clock::now();
     // Random Placment
     random_placement();
     int current_cost = 0;
@@ -210,7 +209,6 @@ int main() {
         // if(isLog == 1)
         //     save_grid_state(gif_file_name, grid);
         current_temp = cooling_rate * current_temp;
-        
     }
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
